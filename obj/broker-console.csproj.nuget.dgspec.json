@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "/Users/anousonefs/workspace/c-sharp/broker-console/broker-console.csproj": {}
+    "/Users/anousone/workspace/laomesh/broker-console2/broker-console.csproj": {}
   },
   "projects": {
-    "/Users/anousonefs/workspace/c-sharp/broker-console/broker-console.csproj": {
+    "/Users/anousone/workspace/laomesh/broker-console2/broker-console.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/anousonefs/workspace/c-sharp/broker-console/broker-console.csproj",
+        "projectUniqueName": "/Users/anousone/workspace/laomesh/broker-console2/broker-console.csproj",
         "projectName": "broker-console",
-        "projectPath": "/Users/anousonefs/workspace/c-sharp/broker-console/broker-console.csproj",
-        "packagesPath": "/Users/anousonefs/.nuget/packages/",
-        "outputPath": "/Users/anousonefs/workspace/c-sharp/broker-console/obj/",
+        "projectPath": "/Users/anousone/workspace/laomesh/broker-console2/broker-console.csproj",
+        "packagesPath": "/Users/anousone/.nuget/packages/",
+        "outputPath": "/Users/anousone/workspace/laomesh/broker-console2/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/Users/anousonefs/.nuget/NuGet/NuGet.Config"
+          "/Users/anousone/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net5.0"
@@ -74,7 +74,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/5.0.404/RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/6.0.202/RuntimeIdentifierGraph.json"
         }
       }
     }

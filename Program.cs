@@ -15,26 +15,29 @@ namespace broker_console
     {
         static async Task Main(string[] args)
         {
-            Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.Information()
+            Log.Logger = new LoggerConfiguration().MinimumLevel
+                .Information()
                 .WriteTo.Console()
-                .WriteTo.File("log.txt",
+                .WriteTo.File(
+                    "./logs/log.txt",
                     rollingInterval: RollingInterval.Day,
-                    rollOnFileSizeLimit: true)
+                    rollOnFileSizeLimit: true
+                )
                 .CreateLogger();
             // Create the options for our MQTT Broker
             MqttServerOptionsBuilder options = new MqttServerOptionsBuilder()
-                                                // log
-                                                .WithConnectionBacklog(100)
-                                                // set endpoint to localhost
-                                                .WithDefaultEndpoint()
-                                                // port used will be 707
-                                                .WithDefaultEndpointPort(707)
-                                                // handler for new connections
-                                                .WithConnectionValidator(OnNewConnection)
-                                                // handler for new messages
-                                                .WithApplicationMessageInterceptor(OnNewMessage)
-                                                .WithStorage(new RetainedMessageHandler());
+                // log
+                .WithConnectionBacklog(100)
+                // set endpoint to localhost
+                .WithDefaultEndpoint()
+                // port used will be 1883
+                .WithDefaultEndpointPort(1883)
+                // handler for new connections
+                .WithConnectionValidator(OnNewConnection)
+                // handler for new messages
+                .WithApplicationMessageInterceptor(OnNewMessage)
+                .WithSubscriptionInterceptor(OnNewSubscriptions)
+                .WithStorage(new RetainedMessageHandler());
 
             IMqttServer mqttServer = new MqttFactory().CreateMqttServer();
             // mqttServer.StartAsync(options.Bu()).GetAwaiter().GetResult();
@@ -48,38 +51,35 @@ namespace broker_console
 
         public static void OnNewConnection(MqttConnectionValidatorContext context)
         {
-            if (context.Username != "Hans")
-            {
-                context.ReasonCode = MqttConnectReasonCode.BadUserNameOrPassword;
-                context.ReasonCode = MqttConnectReasonCode.BadUserNameOrPassword;
-                Log.Information(
-                    "New connection: ClientId = {clientId}, Endpoint = {endpoint}, Username = {username}, Password = {password}, Rawpassword = {rawPassword}",
-                    context.ClientId,
-                    context.Endpoint, context.Username, context.Password, context.RawPassword);
-                return;
-            }
-
-            if (context.Password != "Test")
-            {
-                context.ReasonCode = MqttConnectReasonCode.BadUserNameOrPassword;
-                Log.Information(
-                    "New connection: ClientId = {clientId}, Endpoint = {endpoint}, Username = {username}, Password = {password}, Rawpassword = {rawPassword}",
-                    context.ClientId,
-                    context.Endpoint, context.Username, context.Password, context.RawPassword);
-                return;
-            }
-
-            context.ReasonCode = MqttConnectReasonCode.Success;
             Log.Information(
-                    "New connection: ClientId = {clientId}, Endpoint = {endpoint}",
-                    context.ClientId,
-                    context.Endpoint);
+                "New connection: ClientId = {clientId}, Endpoint = {endpoint}, Username: {username}, Password: {password}",
+                context.ClientId,
+                context.Endpoint,
+                context.Username,
+                context.Password
+            );
+            if (context.Username != "anousone")
+            {
+                context.ReasonCode = MqttConnectReasonCode.BadUserNameOrPassword;
+                return;
+            }
+
+            if (context.Password != "qwertyanousone")
+            {
+                context.ReasonCode = MqttConnectReasonCode.BadUserNameOrPassword;
+                return;
+            }
+            context.ReasonCode = MqttConnectReasonCode.Success;
         }
 
         static uint MessageCounter = 0;
+
         public static void OnNewMessage(MqttApplicationMessageInterceptorContext context)
         {
-            var payload = context.ApplicationMessage?.Payload == null ? null : Encoding.UTF8.GetString(context.ApplicationMessage?.Payload);
+            var payload =
+                context.ApplicationMessage?.Payload == null
+                    ? null
+                    : Encoding.UTF8.GetString(context.ApplicationMessage?.Payload);
 
             MessageCounter++;
 
@@ -91,7 +91,43 @@ namespace broker_console
                 context.ApplicationMessage?.Topic,
                 payload,
                 context.ApplicationMessage?.QualityOfServiceLevel,
-                context.ApplicationMessage?.Retain);
+                context.ApplicationMessage?.Retain
+            );
+
+            if (context.ApplicationMessage.Topic == "wsm/sensor")
+            {
+                context.ApplicationMessage.Payload = Encoding.UTF8.GetBytes(
+                    "DateTime: " + DateTime.Now
+                );
+            }
+
+            // It is possible to disallow the sending of messages for a certain client id like this:
+            if (context.ClientId == "anonymous")
+            {
+                context.AcceptPublish = false;
+                return;
+            }
+            // It is also possible to read the payload and extend it. For example by adding a timestamp in a JSON document.
+            // This is useful when the IoT device has no own clock and the creation time of the message might be important.
+        }
+
+        public static void OnNewSubscriptions(MqttSubscriptionInterceptorContext context)
+        {
+            // intercept wsm
+            // if (!context.TopicFilter.Topic.StartsWith("api"))
+            // {
+            //     context.AcceptSubscription = false;
+            // }
+            // if (context.TopicFilter.Topic.StartsWith("hack") && context.ClientId == "hacker")
+            // {
+            //     context.AcceptSubscription = false;
+            //     context.CloseConnection = true;
+            // }
+            // intercept api
+            // if (context.TopicFilter.Topic.StartsWith("wsm") && context.ClientId == "api")
+            // {
+            //     context.AcceptSubscription = true;
+            // }
         }
     }
 
@@ -116,7 +152,9 @@ namespace broker_console
             if (File.Exists(Filename))
             {
                 var json = File.ReadAllText(Filename);
-                retainedMessages = JsonConvert.DeserializeObject<List<MqttApplicationMessage>>(json);
+                retainedMessages = JsonConvert.DeserializeObject<List<MqttApplicationMessage>>(
+                    json
+                );
             }
             else
             {
